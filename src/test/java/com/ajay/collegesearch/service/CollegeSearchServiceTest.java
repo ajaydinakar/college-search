@@ -1,28 +1,20 @@
 package com.ajay.collegesearch.service;
 
 import com.ajay.collegesearch.model.College;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import lombok.extern.slf4j.Slf4j;
-import org.json.JSONObject;
+import com.ajay.collegesearch.model.MetaData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.net.URI;
 import java.util.*;
 
-@Slf4j
+
 @ExtendWith(MockitoExtension.class)
 class CollegeSearchServiceTest {
     @Mock
@@ -82,20 +74,7 @@ return list;
 
    @Test
     void getInfo() throws FileNotFoundException {
-//        JsonElement root = new JsonParser().parse(new FileReader("/Users/ajaydinakar/Downloads/college-search/result.json"));
-//        JsonObject object=root.getAsJsonObject();
-//        log.info("obj" +object.toString());
-//       HashMap<String, Object> data = new Gson().fromJson(object.toString(), HashMap.class);
-//        Mockito.when(collegeSearchService.getUriComponentsBuilder(
-//                ArgumentMatchers.anyString(),
-//                ArgumentMatchers.anyString(),
-//                ArgumentMatchers.anyString(),
-//                ArgumentMatchers.anyString(),
-//                ArgumentMatchers.anyString(),
-//                ArgumentMatchers.anyString(),
-//                ArgumentMatchers.anyString(),
-//                ArgumentMatchers.anyString())).thenReturn(getURI());
-//        Mockito.when(restTemplate.getForObject(Mockito.anyString(),ArgumentMatchers.any(Class.class))).thenReturn(new ResponseEntity(data, HttpStatus.OK));
+
        Assertions.assertEquals(collegeSearchService.getInfo("2020","2,3","76308-2099","Wichita Falls","TX","100","0"
        ).getColleges().get(0).getState(),"TX");
     }
@@ -128,5 +107,87 @@ return list;
                 .queryParamIfPresent("school.state", Optional.ofNullable("state"))
                 .queryParam("fields", "fields");
         return builder;
+    }
+    @Test
+    void getInfo_withValidParameters_returnsCorrectState() throws FileNotFoundException {
+        Mockito.when(collegeSearchService.getUriComponentsBuilder(
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString())).thenReturn(getURI());
+        Mockito.when(restTemplate.getForObject(Mockito.anyString(), ArgumentMatchers.any(Class.class)))
+                .thenReturn(new HashMap<String, Object>() {{
+                    put("metadata", new MetaData());
+                    put("results", resultlist());
+                }});
+        Assertions.assertEquals("TX", collegeSearchService.getInfo("2020", "2,3", "76308-2099", "Wichita Falls", "TX", "100", "0")
+                .getColleges().get(0).getState());
+    }
+
+    @Test
+    void getInfo_withNullResults_returnsEmptyColleges() throws FileNotFoundException {
+        Mockito.when(collegeSearchService.getUriComponentsBuilder(
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString())).thenReturn(getURI());
+        Mockito.when(restTemplate.getForObject(Mockito.anyString(), ArgumentMatchers.any(Class.class)))
+                .thenReturn(new HashMap<String, Object>() {{
+                    put("metadata", new MetaData());
+                    put("results", null);
+                }});
+        Assertions.assertTrue(collegeSearchService.getInfo("2020", "2,3", "76308-2099", "Wichita Falls", "TX", "100", "0")
+                .getColleges().isEmpty());
+    }
+
+    @Test
+    void getInfo_withEmptyResults_returnsEmptyColleges() throws FileNotFoundException {
+        Mockito.when(collegeSearchService.getUriComponentsBuilder(
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString())).thenReturn(getURI());
+        Mockito.when(restTemplate.getForObject(Mockito.anyString(), ArgumentMatchers.any(Class.class)))
+                .thenReturn(new HashMap<String, Object>() {{
+                    put("metadata", new MetaData());
+                    put("results", new ArrayList<>());
+                }});
+        Assertions.assertTrue(collegeSearchService.getInfo("2020", "2,3", "76308-2099", "Wichita Falls", "TX", "100", "0")
+                .getColleges().isEmpty());
+    }
+
+    @Test
+    void mapResultToResponse_withNullValues_returnsNotAvailable() {
+        List<Map> result = new ArrayList<>();
+        Map<String, String> map = new HashMap<>();
+        map.put("latest.student.size", null);
+        map.put("school.name", null);
+        map.put("school.city", null);
+        map.put("school.zip", null);
+        map.put("school.state", null);
+        map.put("school.school_url", null);
+        map.put("school.price_calculator_url", null);
+        map.put("school.accreditor", null);
+        result.add(map);
+        List<College> colleges = collegeSearchService.mapResultToResponse(result, "latest");
+        Assertions.assertEquals("Not Available", colleges.get(0).getTotalStudents());
+        Assertions.assertEquals("Not Available", colleges.get(0).getCollegeName());
+        Assertions.assertEquals("Not Available", colleges.get(0).getCity());
+        Assertions.assertEquals("Not Available", colleges.get(0).getZip());
+        Assertions.assertEquals("Not Available", colleges.get(0).getState());
+        Assertions.assertEquals("Not Available", colleges.get(0).getFeeCalaculationUrl());
+        Assertions.assertEquals("Not Available", colleges.get(0).getAccreditor());
     }
 }

@@ -2,12 +2,8 @@ package com.ajay.collegesearch.model;
 
 import lombok.*;
 
-@Getter
-@Setter
-@NoArgsConstructor
+@Data
 @AllArgsConstructor
-@ToString
-@Builder
 public class College {
     String collegeName;
     String city;

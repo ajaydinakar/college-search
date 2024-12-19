@@ -5,6 +5,7 @@ import com.ajay.collegesearch.model.CollegeSearchResponse;
 import com.ajay.collegesearch.model.MetaData;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -15,7 +16,8 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class CollegeSearchService {
-
+    @Value("${api.key}")
+    private String apiKey;
     public CollegeSearchResponse getInfo(String year, String degrees, String zip, String city,String state, String per_page, String page) {
         RestTemplate restTemplate=new RestTemplate();
         final String URI = "https://api.data.gov/ed/collegescorecard/v1/schools.json";
@@ -34,7 +36,7 @@ public class CollegeSearchService {
     public  UriComponentsBuilder getUriComponentsBuilder(String degrees, String zip, String city, String state, String per_page, String page, String URI, String fields) {
         UriComponentsBuilder builder = UriComponentsBuilder
                 .fromUriString(URI)
-                .queryParam("api_key", "evmuN5HtZ37vVA98S7wZLxmrVQzZ0E6ddPPqSrD9")
+                .queryParam("api_key", apiKey)
                 .queryParamIfPresent("school.degrees_awarded.predominant", Optional.ofNullable(degrees))
                 .queryParamIfPresent("school.zip", Optional.ofNullable(zip))
                 .queryParamIfPresent("school.city", Optional.ofNullable(city))
