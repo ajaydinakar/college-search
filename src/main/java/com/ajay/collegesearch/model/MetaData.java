@@ -2,12 +2,9 @@ package com.ajay.collegesearch.model;
 
 import lombok.*;
 
-@Getter
-@Setter
-@NoArgsConstructor
+@Data
 @AllArgsConstructor
-@ToString
-@Builder
+@NoArgsConstructor
 public class MetaData {
     int page;
     int total;
