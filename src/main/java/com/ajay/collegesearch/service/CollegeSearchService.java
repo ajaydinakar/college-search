@@ -3,6 +3,7 @@ package com.ajay.collegesearch.service;
 import com.ajay.collegesearch.model.College;
 import com.ajay.collegesearch.model.CollegeSearchResponse;
 import com.ajay.collegesearch.model.MetaData;
+import com.ajay.collegesearch.util.CollegeConstants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,64 +19,74 @@ import java.util.stream.Collectors;
 public class CollegeSearchService {
     @Value("${api.key}")
     private String apiKey;
+    @Value("${api.url}")
+    private String apiUrl;
     public CollegeSearchResponse getInfo(String year, String degrees, String zip, String city,String state, String per_page, String page) {
         RestTemplate restTemplate=new RestTemplate();
-        final String URI = "https://api.data.gov/ed/collegescorecard/v1/schools.json";
-
-        String fields = getStudentSizeField(year)+
-                ",school.name,school.city,school.zip,school.state,school.school_url,school.price_calculator_url,school.accreditor";
+        final String URI = apiUrl;
+        String fields = getStudentSizeField(year) +
+                "," + CollegeConstants.SCHOOL_NAME +
+                "," + CollegeConstants.SCHOOL_CITY +
+                "," + CollegeConstants.SCHOOL_ZIP +
+                "," + CollegeConstants.SCHOOL_STATE +
+                "," + CollegeConstants.SCHOOL_URL +
+                "," + CollegeConstants.SCHOOL_PRICE_CALCULATOR_URL +
+                "," + CollegeConstants.SCHOOL_ACCREDITOR;
         UriComponentsBuilder builder = getUriComponentsBuilder(degrees, zip, city, state, per_page, page, URI, fields);
-        Map collegeScoreCardResponse = restTemplate.getForObject(builder.toUriString().replaceAll("%20"," "), Map.class);
-        ObjectMapper mapper = new ObjectMapper();
-        MetaData metadata = mapper.convertValue(collegeScoreCardResponse.get("metadata"), MetaData.class);
-        List<Map> list = (List<Map>) collegeScoreCardResponse.get("results");
-        CollegeSearchResponse collegeSearchResponse = getResponse(metadata, list,year);
-        return collegeSearchResponse;
+        try {
+            Map collegeScoreCardResponse = restTemplate.getForObject(builder.toUriString().replaceAll("%20", " "), Map.class);
+            ObjectMapper mapper = new ObjectMapper();
+            MetaData metadata = mapper.convertValue(collegeScoreCardResponse.get("metadata"), MetaData.class);
+            List<Map> list = (List<Map>) collegeScoreCardResponse.get("results");
+            return getResponse(metadata, list, year);
+        } catch (Exception e) {
+            log.error("Error occurred while fetching college information", e);
+            return new CollegeSearchResponse();
+        }
     }
 
     public  UriComponentsBuilder getUriComponentsBuilder(String degrees, String zip, String city, String state, String per_page, String page, String URI, String fields) {
         UriComponentsBuilder builder = UriComponentsBuilder
                 .fromUriString(URI)
                 .queryParam("api_key", apiKey)
-                .queryParamIfPresent("school.degrees_awarded.predominant", Optional.ofNullable(degrees))
-                .queryParamIfPresent("school.zip", Optional.ofNullable(zip))
-                .queryParamIfPresent("school.city", Optional.ofNullable(city))
-                .queryParamIfPresent("per_page", Optional.ofNullable(per_page))
-                .queryParamIfPresent("page", Optional.ofNullable(page))
-                .queryParamIfPresent("school.state", Optional.ofNullable(state))
-                .queryParam("fields", fields);
+                .queryParamIfPresent(CollegeConstants.SCHOOL_DEGREES_AWARDED_PREDOMINANT, Optional.ofNullable(degrees))
+                .queryParamIfPresent(CollegeConstants.SCHOOL_ZIP, Optional.ofNullable(zip))
+                .queryParamIfPresent(CollegeConstants.SCHOOL_CITY, Optional.ofNullable(city))
+                .queryParamIfPresent(CollegeConstants.PER_PAGE, Optional.ofNullable(per_page))
+                .queryParamIfPresent(CollegeConstants.PAGE, Optional.ofNullable(page))
+                .queryParamIfPresent(CollegeConstants.SCHOOL_STATE, Optional.ofNullable(state))
+                .queryParam(CollegeConstants.FIELDS, fields);
         return builder;
     }
 
     public CollegeSearchResponse getResponse(MetaData metadata, List<Map> list,String year) {
         Comparator<College> compareByCollegeName = Comparator.comparing(College::getCollegeName);
-        CollegeSearchResponse collegeSearchResponse = new CollegeSearchResponse(metadata, mapResultToResponse(list,year)
+        return new CollegeSearchResponse(metadata, mapResultToResponse(list,year)
                 .stream()
                 .sorted(compareByCollegeName)
                 .collect(Collectors.toList()));
-        return collegeSearchResponse;
     }
 
     public List<College> mapResultToResponse(List<Map> result,String year) {
         List<College> colleges = new ArrayList<>();
-        result.stream().forEach((college) -> colleges.add(new College(
-                (college.get("school.name") == null) ? "Not Available" : college.get("school.name").toString(),
-                (college.get("school.city") == null) ? "Not Available" : college.get("school.city").toString(),
-                (college.get("school.zip") == null) ? "Not Available" : college.get("school.zip").toString(),
-                (college.get("school.state") == null) ? "Not Available" : college.get("school.state").toString(),
-                (college.get("school.school_url") == null) ? "Not Available" : college.get("school.school_url").toString(),
-                (college.get("school.accreditor") == null) ? "Not Available" : college.get("school.accreditor").toString(),
-                (college.get("school.price_calculator_url") == null) ? "Not Available" : college.get("school.price_calculator_url").toString(),
-                ((college.get(getStudentSizeField(year)) == null ? "Not Available" :  college.get(getStudentSizeField(year)).toString())))));
+        result.forEach((college) -> colleges.add(new College(
+                (college.get(CollegeConstants.SCHOOL_NAME) == null) ? CollegeConstants.NOT_AVAILABLE : college.get(CollegeConstants.SCHOOL_NAME).toString(),
+                (college.get(CollegeConstants.SCHOOL_CITY) == null) ? CollegeConstants.NOT_AVAILABLE : college.get(CollegeConstants.SCHOOL_CITY).toString(),
+                (college.get(CollegeConstants.SCHOOL_ZIP) == null) ? CollegeConstants.NOT_AVAILABLE : college.get(CollegeConstants.SCHOOL_ZIP).toString(),
+                (college.get(CollegeConstants.SCHOOL_STATE) == null) ? CollegeConstants.NOT_AVAILABLE: college.get(CollegeConstants.SCHOOL_STATE).toString(),
+                (college.get(CollegeConstants.SCHOOL_URL) == null) ? CollegeConstants.NOT_AVAILABLE: college.get(CollegeConstants.SCHOOL_URL).toString(),
+                (college.get(CollegeConstants.SCHOOL_ACCREDITOR) == null) ? CollegeConstants.NOT_AVAILABLE: college.get(CollegeConstants.SCHOOL_ACCREDITOR).toString(),
+                (college.get(CollegeConstants.SCHOOL_PRICE_CALCULATOR_URL) == null) ? CollegeConstants.NOT_AVAILABLE: college.get(CollegeConstants.SCHOOL_PRICE_CALCULATOR_URL).toString(),
+                ((college.get(getStudentSizeField(year)) == null ? CollegeConstants.NOT_AVAILABLE:  college.get(getStudentSizeField(year)).toString())))));
         return colleges;
     }
     public  String getStudentSizeField( String year)
     {
-        String size=new String();
+        String size;
         if (year.isEmpty()) {
-            size="latest.student.size";
+            size= CollegeConstants.LATEST_STUDENT_SIZE;
         } else {
-            size=year + ".student.size";
+            size=year + CollegeConstants.STUDENT_SIZE_SUFFIX;
         }
         return size;
     }
