@@ -1,7 +1,9 @@
 package com.ajay.collegesearch.service;
 
+
 import com.ajay.collegesearch.model.College;
 import com.ajay.collegesearch.model.MetaData;
+import com.ajay.collegesearch.util.CollegeConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,7 +16,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.FileNotFoundException;
 import java.util.*;
 
-
 @ExtendWith(MockitoExtension.class)
 class CollegeSearchServiceTest {
     @Mock
@@ -23,69 +24,67 @@ class CollegeSearchServiceTest {
     ResponseEntity responseEntity;
     @InjectMocks
     @Spy
-    private CollegeSearchService collegeSearchService=new CollegeSearchService();
+    private CollegeSearchService collegeSearchService = new CollegeSearchService();
+
     @Test
     void mapResultToResponse() throws Exception {
-        Mockito.when(collegeSearchService.getStudentSizeField(ArgumentMatchers.anyString())).thenReturn("latest.student.size");
-        List<College> colleges=collegeSearchService.mapResultToResponse(resultlist(),"latest");
-        Assertions.assertEquals(3,colleges.size());
-        Assertions.assertEquals("3695",colleges.get(0).getTotalStudents());
-        Assertions.assertEquals("Not Available",colleges.get(2).getCity());
-        Assertions.assertEquals("Not Available",colleges.get(2).getTotalStudents());
-
+        Mockito.when(collegeSearchService.getStudentSizeField(ArgumentMatchers.anyString())).thenReturn(CollegeConstants.LATEST_STUDENT_SIZE);
+        List<College> colleges = collegeSearchService.mapResultToResponse(resultlist(), "latest");
+        Assertions.assertEquals(3, colleges.size());
+        Assertions.assertEquals("3695", colleges.get(0).getTotalStudents());
+        Assertions.assertEquals(CollegeConstants.NOT_AVAILABLE, colleges.get(2).getCity());
+        Assertions.assertEquals(CollegeConstants.NOT_AVAILABLE, colleges.get(2).getTotalStudents());
     }
 
-    public List<Map> resultlist()
-    {
- List<Map> list=new ArrayList<>();
-Map map1=new HashMap<String,String>();
-        map1.put("latest.student.size" ,"3695");
-        map1.put("school.name","Abilene Christian University");
-        map1.put("school.city","Abilene");
-        map1.put("school.zip","79699");
-        map1.put("school.state","TX");
-        map1.put("school.school_url","www.acu.edu/");
-        map1.put("school.price_calculator_url","https://www.highered.texas.gov/apps/NPC/?Fice=003537");
-        map1.put("school.accreditor","Southern Association of Colleges and Schools Commission on Colleges");
+    public List<Map> resultlist() {
+        List<Map> list = new ArrayList<>();
+        Map<String, String> map1 = new HashMap<>();
+        map1.put(CollegeConstants.LATEST_STUDENT_SIZE, "3695");
+        map1.put(CollegeConstants.SCHOOL_NAME, "Abilene Christian University");
+        map1.put(CollegeConstants.SCHOOL_CITY, "Abilene");
+        map1.put(CollegeConstants.SCHOOL_ZIP, "79699");
+        map1.put(CollegeConstants.SCHOOL_STATE, "TX");
+        map1.put(CollegeConstants.SCHOOL_URL, "www.acu.edu/");
+        map1.put(CollegeConstants.SCHOOL_PRICE_CALCULATOR_URL, "https://www.highered.texas.gov/apps/NPC/?Fice=003537");
+        map1.put(CollegeConstants.SCHOOL_ACCREDITOR, "Southern Association of Colleges and Schools Commission on Colleges");
 
-        Map map2=new HashMap<String,String>();
-        map2.put("latest.student.size" ,"4982");
-        map2.put("school.name","Alvin Community College");
-        map2.put("school.city","Alvin");
-        map2.put("school.zip","77511-4898");
-        map2.put("school.state","TX");
-        map2.put("school.school_url","www.alvincollege.edu/");
-        map2.put("school.price_calculator_url","www.alvincollege.edu/financial-aid/netprice/npcalc.htm");
-        map2.put("school.accreditor","Southern Association of Colleges and Schools Commission on Colleges");
-        Map map3=new HashMap<String,String>();
-        map3.put("latest.student.size" ,null);
-        map3.put("school.name",null);
-        map3.put("school.city",null);
-        map3.put("school.zip",null);
-        map3.put("school.state",null);
-        map3.put("school.school_url",null);
-        map3.put("school.price_calculator_url",null);
-        map3.put("school.accreditor",null);
+        Map<String, String> map2 = new HashMap<>();
+        map2.put(CollegeConstants.LATEST_STUDENT_SIZE, "4982");
+        map2.put(CollegeConstants.SCHOOL_NAME, "Alvin Community College");
+        map2.put(CollegeConstants.SCHOOL_CITY, "Alvin");
+        map2.put(CollegeConstants.SCHOOL_ZIP, "77511-4898");
+        map2.put(CollegeConstants.SCHOOL_STATE, "TX");
+        map2.put(CollegeConstants.SCHOOL_URL, "www.alvincollege.edu/");
+        map2.put(CollegeConstants.SCHOOL_PRICE_CALCULATOR_URL, "www.alvincollege.edu/financial-aid/netprice/npcalc.htm");
+        map2.put(CollegeConstants.SCHOOL_ACCREDITOR, "Southern Association of Colleges and Schools Commission on Colleges");
+
+        Map<String, String> map3 = new HashMap<>();
+        map3.put(CollegeConstants.LATEST_STUDENT_SIZE, null);
+        map3.put(CollegeConstants.SCHOOL_NAME, null);
+        map3.put(CollegeConstants.SCHOOL_CITY, null);
+        map3.put(CollegeConstants.SCHOOL_ZIP, null);
+        map3.put(CollegeConstants.SCHOOL_STATE, null);
+        map3.put(CollegeConstants.SCHOOL_URL, null);
+        map3.put(CollegeConstants.SCHOOL_PRICE_CALCULATOR_URL, null);
+        map3.put(CollegeConstants.SCHOOL_ACCREDITOR, null);
+
         list.add(map1);
         list.add(map2);
         list.add(map3);
-return list;
+        return list;
     }
 
-   @Test
+    @Test
     void getInfo() throws FileNotFoundException {
-
-       Assertions.assertEquals(collegeSearchService.getInfo("2020","2,3","76308-2099","Wichita Falls","TX","100","0"
-       ).getColleges().get(0).getState(),"TX");
+        Assertions.assertEquals(collegeSearchService.getInfo("2020", "2,3", "76308-2099", "Wichita Falls", "TX", "100", "0")
+                .getColleges().get(0).getState(), "TX");
     }
-
 
     @Test
     void getStudentField() {
-        Assertions.assertEquals(collegeSearchService.getStudentSizeField(""),"latest.student.size");
-        Assertions.assertEquals(collegeSearchService.getStudentSizeField("2017"),"2017.student.size");
+        Assertions.assertEquals(collegeSearchService.getStudentSizeField(""), CollegeConstants.LATEST_STUDENT_SIZE);
+        Assertions.assertEquals(collegeSearchService.getStudentSizeField("2017"), "2017.student.size");
     }
-
 
     @Test
     void getUriComponentsBuilder() {
@@ -94,8 +93,8 @@ return list;
     @Test
     void getResponse() {
     }
-    public UriComponentsBuilder getURI()
-    {
+
+    public UriComponentsBuilder getURI() {
         UriComponentsBuilder builder = UriComponentsBuilder
                 .fromUriString("URI")
                 .queryParam("api_key", "")
@@ -108,6 +107,7 @@ return list;
                 .queryParam("fields", "fields");
         return builder;
     }
+
     @Test
     void getInfo_withValidParameters_returnsCorrectState() throws FileNotFoundException {
         Mockito.when(collegeSearchService.getUriComponentsBuilder(
@@ -172,22 +172,22 @@ return list;
     void mapResultToResponse_withNullValues_returnsNotAvailable() {
         List<Map> result = new ArrayList<>();
         Map<String, String> map = new HashMap<>();
-        map.put("latest.student.size", null);
-        map.put("school.name", null);
-        map.put("school.city", null);
-        map.put("school.zip", null);
-        map.put("school.state", null);
-        map.put("school.school_url", null);
-        map.put("school.price_calculator_url", null);
-        map.put("school.accreditor", null);
+        map.put(CollegeConstants.LATEST_STUDENT_SIZE, null);
+        map.put(CollegeConstants.SCHOOL_NAME, null);
+        map.put(CollegeConstants.SCHOOL_CITY, null);
+        map.put(CollegeConstants.SCHOOL_ZIP, null);
+        map.put(CollegeConstants.SCHOOL_STATE, null);
+        map.put(CollegeConstants.SCHOOL_URL, null);
+        map.put(CollegeConstants.SCHOOL_PRICE_CALCULATOR_URL, null);
+        map.put(CollegeConstants.SCHOOL_ACCREDITOR, null);
         result.add(map);
         List<College> colleges = collegeSearchService.mapResultToResponse(result, "latest");
-        Assertions.assertEquals("Not Available", colleges.get(0).getTotalStudents());
-        Assertions.assertEquals("Not Available", colleges.get(0).getCollegeName());
-        Assertions.assertEquals("Not Available", colleges.get(0).getCity());
-        Assertions.assertEquals("Not Available", colleges.get(0).getZip());
-        Assertions.assertEquals("Not Available", colleges.get(0).getState());
-        Assertions.assertEquals("Not Available", colleges.get(0).getFeeCalaculationUrl());
-        Assertions.assertEquals("Not Available", colleges.get(0).getAccreditor());
+        Assertions.assertEquals(CollegeConstants.NOT_AVAILABLE, colleges.get(0).getTotalStudents());
+        Assertions.assertEquals(CollegeConstants.NOT_AVAILABLE, colleges.get(0).getCollegeName());
+        Assertions.assertEquals(CollegeConstants.NOT_AVAILABLE, colleges.get(0).getCity());
+        Assertions.assertEquals(CollegeConstants.NOT_AVAILABLE, colleges.get(0).getZip());
+        Assertions.assertEquals(CollegeConstants.NOT_AVAILABLE, colleges.get(0).getState());
+        Assertions.assertEquals(CollegeConstants.NOT_AVAILABLE, colleges.get(0).getFeeCalaculationUrl());
+        Assertions.assertEquals(CollegeConstants.NOT_AVAILABLE, colleges.get(0).getAccreditor());
     }
 }
